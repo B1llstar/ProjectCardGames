@@ -1,4 +1,5 @@
-<template>  <div class="game-table">
+<template>
+  <div class="poker-table">
     <!-- Community Cards -->
     <div class="community-cards">
       <PlayingCard

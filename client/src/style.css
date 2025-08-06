@@ -8,110 +8,225 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 min-h-screen text-white;
+    background: linear-gradient(to bottom right, #111827, #1e3a8a, #581c87);
+    min-height: 100vh;
+    color: white;
   }
 }
 
-@layer components {
-  .card {
-    @apply bg-gray-800 rounded-lg shadow-lg border border-gray-700 text-white;
+@layer components {  .card {
+    background-color: #1f2937;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #374151;
+    color: white;
     transition: all 0.3s ease;
   }
   
   .card:hover {
-    @apply shadow-xl transform scale-105 border-gray-600;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: scale(1.05);
+    border-color: #4b5563;
   }
-  
-  .playing-card {
-    @apply w-16 h-24 bg-white rounded-lg border-2 border-gray-300 flex items-center justify-center text-lg font-bold cursor-pointer relative;
+    .playing-card {
+    width: 4rem;
+    height: 6rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    border: 2px solid #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
     transition: all 0.3s ease;
     perspective: 1000px;
   }
   
   .playing-card:hover {
-    @apply transform -translate-y-2 shadow-lg;
+    transform: translateY(-0.5rem);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   }
-  
-  .playing-card.suggested {
-    @apply ring-4 ring-yellow-400 ring-opacity-70 animate-pulse-glow;
+    .playing-card.suggested {
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.7);
+    animation: pulse 2s infinite;
   }
   
   .playing-card.hearts,
   .playing-card.diamonds {
-    @apply text-red-600;
+    color: #dc2626;
   }
   
   .playing-card.clubs,
   .playing-card.spades {
-    @apply text-black;
+    color: black;
   }
   
   .playing-card.face-down {
-    @apply bg-blue-900 border-blue-700;
+    background-color: #1e3a8a;
+    border-color: #1d4ed8;
   }
   
   .playing-card.face-down::before {
     content: '🂠';
-    @apply text-blue-300 text-2xl;
+    color: #93c5fd;
+    font-size: 1.5rem;
+  }
+    .btn {
+    padding: 1rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 200ms ease;
+    transform: scale(1);
+    outline: none;
+    box-shadow: 0 0 0 2px transparent;
   }
   
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  .btn:hover {
+    transform: scale(1.05);
+  }
+  
+  .btn:focus {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
   }
   
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    background-color: #2563eb;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #1d4ed8;
   }
   
   .btn-secondary {
-    @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+    background-color: #4b5563;
+    color: white;
   }
-    .btn-success {
-    @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+  
+  .btn-secondary:hover {
+    background-color: #374151;
+  }
+  
+  .btn-success {
+    background-color: #059669;
+    color: white;
+  }
+  
+  .btn-success:hover {
+    background-color: #047857;
   }
   
   .btn-warning {
-    @apply bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500;
+    background-color: #d97706;
+    color: white;
+  }
+  
+  .btn-warning:hover {
+    background-color: #b45309;
   }
   
   .btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    background-color: #dc2626;
+    color: white;
   }
   
+  .btn-danger:hover {
+    background-color: #b91c1c;
+  }
   .poker-table {
-    @apply relative w-full max-w-6xl mx-auto bg-green-800 rounded-full border-8 border-yellow-600;
+    position: relative;
+    width: 100%;
+    max-width: 64rem;
+    margin: 0 auto;
+    background: radial-gradient(ellipse at center, #2d5016 0%, #1a4408 100%);
+    border-radius: 9999px;
+    border: 8px solid #d97706;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     aspect-ratio: 2 / 1;
+    min-height: 400px;
+  }
+    .player-seat {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+    .community-cards {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 0.5rem;
+  }
+    .pot-display {
+    position: absolute;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #eab308;
+    color: #000;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: bold;
+  }
+    .input-dark {
+    background-color: #1f2937;
+    border-color: #4b5563;
+    color: white;
   }
   
-  .player-seat {
-    @apply absolute flex flex-col items-center space-y-2;
+  .input-dark::placeholder {
+    color: #9ca3af;
   }
   
-  .community-cards {
-    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex space-x-2;
+  .input-dark:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+    .lobby-card {
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
   }
   
-  .pot-display {
-    @apply absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-500 text-black px-4 py-2 rounded-full font-bold;
+  .lobby-card:hover {
+    border-color: #4b5563;
+  }
+    .player-info {
+    background-color: #374151;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid #4b5563;
+  }
+    .action-button {
+    background-color: #374151;
+    color: white;
+    border: 1px solid #4b5563;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
   }
   
-  .input-dark {
-    @apply bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500;
+  .action-button:hover {
+    background-color: #4b5563;
   }
-  
-  .lobby-card {
-    @apply bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-all;
-  }
-  
-  .player-info {
-    @apply bg-gray-700 rounded-lg p-3 border border-gray-600;
-  }
-  
-  .action-button {
-    @apply bg-gray-700 hover:bg-gray-600 text-white border border-gray-600 rounded-lg px-4 py-2 transition-all;
-  }
-  
-  .game-table {
-    @apply bg-gradient-to-br from-green-800 to-green-900 rounded-2xl border-4 border-yellow-600 shadow-2xl;
+    .game-table {
+    position: relative;
+    width: 100%;
+    max-width: 64rem;
+    margin: 0 auto;
+    background: radial-gradient(ellipse at center, #2d5016 0%, #1a4408 100%);
+    border-radius: 9999px;
+    border: 8px solid #d97706;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    aspect-ratio: 2 / 1;
+    min-height: 400px;
   }
 }
