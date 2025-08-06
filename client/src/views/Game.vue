@@ -230,13 +230,8 @@ const pokerHands = ref([
     rank: 10,
     name: 'High Card',
     description: 'When no other hand is achieved',
-    example: 'A♠ J♥ 9♦ 7♣ 2♠'
-  }
+    example: 'A♠ J♥ 9♦ 7♣ 2♠'  }
 ])
-
-const gameStore = useGameStore()
-const router = useRouter()
-const { user, currentLobby, gameState, currentPlayer, isCurrentPlayerTurn, error } = storeToRefs(gameStore)
 
 const activePlayers = computed(() => {
   return gameState.value?.players?.filter(p => p.isActive && !p.isFolded) || []
