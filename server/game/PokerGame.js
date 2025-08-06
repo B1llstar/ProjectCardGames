@@ -1,6 +1,7 @@
 class PokerGame {
   constructor(players, settings = {}) {
-    this.gameType = 'poker';    this.players = players.map((player, index) => ({
+    this.gameType = 'poker';
+      this.players = players.map((player, index) => ({
       ...player,
       position: index,
       cards: [],
@@ -9,7 +10,8 @@ class PokerGame {
       isActive: true,
       isFolded: false,
       isAllIn: false,
-      handRank: null
+      handRank: null,
+      peligold: player.peligold || 1000 // Ensure peligold is preserved/initialized
     }));
     
     this.settings = {

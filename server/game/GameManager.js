@@ -22,16 +22,16 @@ class GameManager {
 
     if (lobby.players.length >= lobby.maxPlayers) {
       return { success: false, error: 'Lobby is full' };
-    }
-
-    if (lobby.isGameStarted) {
+    }    if (lobby.isGameStarted) {
       return { success: false, error: 'Game already in progress' };
     }
-
+    
     // Check if user already in lobby
     if (lobby.players.find(p => p.id === user.id)) {
       return { success: false, error: 'Already in lobby' };
-    }    lobby.players.push({
+    }
+    
+    lobby.players.push({
       ...user,
       isReady: false,
       peligold: 1000 // Starting amount
