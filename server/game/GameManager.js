@@ -12,17 +12,18 @@ class GameManager {
   getLobby(lobbyId) {
     return this.lobbies.get(lobbyId);
   }
-
   joinLobby(lobbyId, user) {
     const lobby = this.lobbies.get(lobbyId);
     
     if (!lobby) {
       return { success: false, error: 'Lobby not found' };
     }
-
+    
     if (lobby.players.length >= lobby.maxPlayers) {
       return { success: false, error: 'Lobby is full' };
-    }    if (lobby.isGameStarted) {
+    }
+    
+    if (lobby.isGameStarted) {
       return { success: false, error: 'Game already in progress' };
     }
     

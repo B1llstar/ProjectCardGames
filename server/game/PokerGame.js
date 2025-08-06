@@ -1,40 +1,32 @@
-class PokerGame {  constructor(players, settings = {}) {
+class PokerGame {
+  constructor(players, settings = {}) {
     this.gameType = 'poker';
+    console.log('Starting new poker game with players:', players.map(p => p.name));
     
-    // Debug: Log the incoming players to see their structure
-    console.log('PokerGame constructor received players:', JSON.stringify(players, null, 2));
-    
-    this.players = players.map((player, index) => ({
-      ...player,
+    // Simple player setup - just preserve what we need    this.players = players.map((player, index) => ({
+      id: player.id,
+      name: player.name,
       position: index,
       cards: [],
       bet: 0,
       totalBet: 0,
+      chips: player.peligold || 1000,
+      peligold: player.peligold || 1000, // Keep both for compatibility
       isActive: true,
       isFolded: false,
       isAllIn: false,
-      handRank: null,
-      peligold: player.peligold || 1000 // Ensure peligold is preserved/initialized
+      isDealer: index === 0,
+      handRank: null
     }));
     
-    this.settings = {
-      blinds: { small: 10, big: 20 },
-      autoDealer: settings.autoDealer || true,
-      ...settings
-    };
-
-    this.gameState = 'waiting'; // waiting, dealing, betting, showdown, finished
-    this.round = 'preflop'; // preflop, flop, turn, river
+    this.gameState = 'playing';
+    this.round = 'preflop';
     this.communityCards = [];
     this.pot = 0;
     this.currentPlayerIndex = 0;
-    this.dealerIndex = 0;
-    this.smallBlindIndex = 1;
-    this.bigBlindIndex = 2;
     this.deck = this.createDeck();
-    this.lastRaiseAmount = this.settings.blinds.big;
-    this.lastAction = null;
-
+    
+    // Initialize game properly
     this.initializeGame();
   }
 
@@ -72,46 +64,107 @@ class PokerGame {  constructor(players, settings = {}) {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
-  }
-
-  initializeGame() {
+  }  initializeGame() {
+    // Set up dealer and blind positions
+    this.dealerIndex = 0;
+    
+    // Handle heads-up (2 players) vs multi-player blind positions
+    if (this.players.length === 2) {
+      // In heads-up, dealer is small blind
+      this.smallBlindIndex = 0;
+      this.bigBlindIndex = 1;
+    } else {
+      // Normal multi-player game
+      this.smallBlindIndex = (this.dealerIndex + 1) % this.players.length;
+      this.bigBlindIndex = (this.dealerIndex + 2) % this.players.length;
+    }
+    
+    // Validate blind indices
+    console.log('Players length:', this.players.length);
+    console.log('smallBlindIndex:', this.smallBlindIndex);
+    console.log('bigBlindIndex:', this.bigBlindIndex);
+    
+    if (this.smallBlindIndex >= this.players.length || this.bigBlindIndex >= this.players.length) {
+      console.error('Invalid blind indices! Fixing...');
+      this.smallBlindIndex = 0;
+      this.bigBlindIndex = 1 % this.players.length;
+    }
+    
+    // Initialize game settings
+    this.settings = {
+      blinds: {
+        small: 10,
+        big: 20
+      },
+      autoDealer: true,
+      ...this.settings
+    };
+      // Initialize betting variables
+    this.lastRaiseAmount = this.settings.blinds.big;
+    
     if (this.settings.autoDealer) {
       this.dealCards();
     }
     this.postBlinds();
     this.gameState = 'betting';
-    this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;
+    
+    // Set current player to first to act after big blind
+    if (this.players.length === 2) {
+      // In heads-up, big blind acts first preflop
+      this.currentPlayerIndex = this.bigBlindIndex;
+    } else {
+      // Normal game: first player after big blind
+      this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;
+    }
   }
-
   dealCards() {
     // Deal 2 cards to each player
     for (let i = 0; i < 2; i++) {
       for (const player of this.players) {
-        if (player.isActive) {
+        if (player.isActive && this.deck.length > 0) {
           player.cards.push(this.deck.pop());
         }
       }
     }
   }  postBlinds() {
-    console.log('postBlinds - players:', JSON.stringify(this.players, null, 2));
+    console.log('postBlinds - players:', this.players.length);
     console.log('postBlinds - smallBlindIndex:', this.smallBlindIndex);
     console.log('postBlinds - bigBlindIndex:', this.bigBlindIndex);
+    
+    // Ensure indices are valid
+    if (this.smallBlindIndex >= this.players.length) {
+      this.smallBlindIndex = 0;
+    }
+    if (this.bigBlindIndex >= this.players.length) {
+      this.bigBlindIndex = this.players.length > 1 ? 1 : 0;
+    }
     
     const smallBlindPlayer = this.players[this.smallBlindIndex];
     const bigBlindPlayer = this.players[this.bigBlindIndex];
 
-    console.log('smallBlindPlayer:', smallBlindPlayer);
-    console.log('bigBlindPlayer:', bigBlindPlayer);
+    console.log('smallBlindPlayer:', smallBlindPlayer ? smallBlindPlayer.name : 'undefined');
+    console.log('bigBlindPlayer:', bigBlindPlayer ? bigBlindPlayer.name : 'undefined');
 
-    smallBlindPlayer.bet = Math.min(this.settings.blinds.small, smallBlindPlayer.peligold);
-    smallBlindPlayer.peligold -= smallBlindPlayer.bet;
-    smallBlindPlayer.totalBet += smallBlindPlayer.bet;
+    if (!smallBlindPlayer || !bigBlindPlayer) {
+      console.error('Invalid blind player indices! Cannot post blinds.');
+      return;
+    }
 
-    bigBlindPlayer.bet = Math.min(this.settings.blinds.big, bigBlindPlayer.peligold);
-    bigBlindPlayer.peligold -= bigBlindPlayer.bet;
-    bigBlindPlayer.totalBet += bigBlindPlayer.bet;
+    // Post small blind
+    const smallBlindAmount = Math.min(this.settings.blinds.small, smallBlindPlayer.chips);
+    smallBlindPlayer.bet = smallBlindAmount;
+    smallBlindPlayer.chips -= smallBlindAmount;
+    smallBlindPlayer.totalBet = (smallBlindPlayer.totalBet || 0) + smallBlindAmount;
 
-    this.pot = smallBlindPlayer.bet + bigBlindPlayer.bet;
+    // Post big blind
+    const bigBlindAmount = Math.min(this.settings.blinds.big, bigBlindPlayer.chips);
+    bigBlindPlayer.bet = bigBlindAmount;
+    bigBlindPlayer.chips -= bigBlindAmount;
+    bigBlindPlayer.totalBet = (bigBlindPlayer.totalBet || 0) + bigBlindAmount;
+
+    this.pot = smallBlindAmount + bigBlindAmount;
+    
+    console.log('Blinds posted successfully. Pot:', this.pot);
   }
 
   handlePlayerAction(playerId, action, amount = 0) {
@@ -180,14 +233,13 @@ class PokerGame {  constructor(players, settings = {}) {
       action: 'fold',
       message: `${player.name} folded`
     };
-  }
-  handleCall(player) {
+  }  handleCall(player) {
     const currentBet = this.getCurrentBet();
-    const callAmount = Math.min(currentBet - player.bet, player.peligold);
+    const callAmount = Math.min(currentBet - player.bet, player.chips);
     
-    player.peligold -= callAmount;
+    player.chips -= callAmount;
     player.bet += callAmount;
-    player.totalBet += callAmount;
+    player.totalBet = (player.totalBet || 0) + callAmount;
     this.pot += callAmount;
 
     const action = callAmount === 0 ? 'check' : 'call';
@@ -195,24 +247,23 @@ class PokerGame {  constructor(players, settings = {}) {
       success: true, 
       action,
       amount: callAmount,
-      message: `${player.name} ${action === 'check' ? 'checked' : `called ${callAmount} Peligold`}`
+      message: `${player.name} ${action === 'check' ? 'checked' : `called ${callAmount} chips`}`
     };
-  }
-  handleRaise(player, raiseAmount) {
+  }  handleRaise(player, raiseAmount) {
     const currentBet = this.getCurrentBet();
     const totalAmount = currentBet - player.bet + raiseAmount;
     
-    if (totalAmount > player.peligold) {
-      return { success: false, error: 'Insufficient Peligold' };
+    if (totalAmount > player.chips) {
+      return { success: false, error: 'Insufficient chips' };
     }
 
-    if (raiseAmount < this.lastRaiseAmount && player.peligold > totalAmount) {
-      return { success: false, error: `Minimum raise is ${this.lastRaiseAmount} Peligold` };
+    if (raiseAmount < this.lastRaiseAmount && player.chips > totalAmount) {
+      return { success: false, error: `Minimum raise is ${this.lastRaiseAmount} chips` };
     }
 
-    player.peligold -= totalAmount;
+    player.chips -= totalAmount;
     player.bet += totalAmount;
-    player.totalBet += totalAmount;
+    player.totalBet = (player.totalBet || 0) + totalAmount;
     this.pot += totalAmount;
     this.lastRaiseAmount = raiseAmount;
 
@@ -220,7 +271,7 @@ class PokerGame {  constructor(players, settings = {}) {
       success: true, 
       action: 'raise',
       amount: raiseAmount,
-      message: `${player.name} raised by ${raiseAmount} Peligold`
+      message: `${player.name} raised by ${raiseAmount} chips`
     };
   }
 
