@@ -18,13 +18,16 @@ class PokerGame {
       isDealer: index === 0,
       handRank: null
     }));
-    
-    this.gameState = 'playing';
+      this.gameState = 'playing';
     this.round = 'preflop';
     this.communityCards = [];
     this.pot = 0;
     this.currentPlayerIndex = 0;
     this.deck = this.createDeck();
+    
+    // Betting round tracking
+    this.playersActedThisRound = new Set();
+    this.bettingRoundStartPlayer = 0;
     
     // Initialize game properly
     this.initializeGame();
@@ -108,8 +111,7 @@ class PokerGame {
       this.dealCards();
     }
     this.postBlinds();
-    this.gameState = 'betting';
-      // Set current player to first to act after big blind
+    this.gameState = 'betting';    // Set current player to first to act after big blind
     if (this.players.length === 2) {
       // In heads-up, dealer (small blind) acts first preflop
       this.currentPlayerIndex = this.smallBlindIndex;
@@ -117,6 +119,10 @@ class PokerGame {
       // Normal game: first player after big blind
       this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;
     }
+    
+    // Reset betting round tracking
+    this.playersActedThisRound = new Set();
+    this.bettingRoundStartPlayer = this.currentPlayerIndex;
   }
 
   dealCards() {    // Deal 2 cards to each player
@@ -211,11 +217,12 @@ class PokerGame {
           break;
         default:
           return { success: false, error: 'Invalid action' };
-      }
-
-      if (!actionResult || !actionResult.success) {
+      }      if (!actionResult || !actionResult.success) {
         return actionResult || { success: false, error: 'Action failed' };
       }
+
+      // Track that this player has acted in this round
+      this.playersActedThisRound.add(playerId);
 
       this.lastAction = {
         playerId,
@@ -223,11 +230,18 @@ class PokerGame {
         amount: actionResult.amount || 0
       };
       
+      console.log(`Player action: ${player.name} ${action} (amount: ${actionResult.amount || 0})`);
+      console.log(`Current pot: ${this.pot}, current bet: ${this.getCurrentBet()}`);
+      
       // Move to next player
       this.moveToNextPlayer();
       
       // Check if betting round is complete
-      if (this.isBettingRoundComplete()) {
+      const roundComplete = this.isBettingRoundComplete();
+      console.log(`Betting round complete: ${roundComplete}`);
+      
+      if (roundComplete) {
+        console.log(`Moving to next round from ${this.round}`);
         this.nextRound();
       }
       
@@ -305,11 +319,14 @@ class PokerGame {
       action: 'check',
       message: `${player.name} checked`
     };
-  }
-  handleAllIn(player) {
+  }  handleAllIn(player) {
     const allInAmount = player.chips;
-    player.bet += allInAmount;
-    player.totalBet += allInAmount;
+    const currentBet = this.getCurrentBet();
+    const totalBetNeeded = Math.max(currentBet, player.bet + allInAmount);
+    
+    // Set the player's bet to their total contribution this round
+    player.bet = totalBetNeeded;
+    player.totalBet = (player.totalBet || 0) + allInAmount;
     player.chips = 0;
     player.peligold = 0; // Keep synchronized
     player.isAllIn = true;
@@ -328,51 +345,120 @@ class PokerGame {
   }  moveToNextPlayer() {
     const startIndex = this.currentPlayerIndex;
     let iterations = 0;
-    const maxIterations = this.players.length;
+    const maxIterations = this.players.length * 2; // Allow more iterations to be safe
     
     do {
       this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
       iterations++;
       
+      console.log(`moveToNextPlayer: iteration ${iterations}, checking player ${this.currentPlayerIndex} (${this.players[this.currentPlayerIndex]?.name})`);
+      
       // Prevent infinite loop
       if (iterations > maxIterations) {
-        console.error('moveToNextPlayer: Could not find next active player');
-        // Find any active player as fallback
-        const activePlayerIndex = this.players.findIndex(p => p.isActive && !p.isFolded);
+        console.error('moveToNextPlayer: Could not find next active player after', maxIterations, 'iterations');
+        
+        // Find any active, non-folded player as fallback
+        const activePlayerIndex = this.players.findIndex(p => p.isActive && !p.isFolded && !p.isAllIn);
         if (activePlayerIndex >= 0) {
+          console.log(`moveToNextPlayer: Using fallback player ${activePlayerIndex} (${this.players[activePlayerIndex].name})`);
           this.currentPlayerIndex = activePlayerIndex;
+        } else {
+          console.log('moveToNextPlayer: No active players found, ending round');
+          // Force end of betting round
+          return;
         }
         break;
       }
+      
+      // Check if we've completed a full circle without finding anyone
+      if (iterations > 1 && this.currentPlayerIndex === startIndex) {
+        console.log('moveToNextPlayer: Completed full circle, checking if round should end');
+        break;
+      }
+      
     } while (
       this.currentPlayerIndex < this.players.length &&
       (this.players[this.currentPlayerIndex].isFolded || 
        !this.players[this.currentPlayerIndex].isActive ||
        this.players[this.currentPlayerIndex].isAllIn)
     );
-  }
-  isBettingRoundComplete() {
+    
+    const currentPlayer = this.players[this.currentPlayerIndex];
+    console.log(`moveToNextPlayer: Selected player ${this.currentPlayerIndex} (${currentPlayer?.name}) - folded: ${currentPlayer?.isFolded}, active: ${currentPlayer?.isActive}, allIn: ${currentPlayer?.isAllIn}`);
+  }  isBettingRoundComplete() {
     try {
       const activePlayers = this.players.filter(p => p.isActive && !p.isFolded);
-      if (activePlayers.length <= 1) return true;
+      
+      // If only one player remains, round is complete
+      if (activePlayers.length <= 1) {
+        console.log('Betting round complete: Only one player remaining');
+        return true;
+      }
 
       const currentBet = this.getCurrentBet();
-      const playersWhoNeedToAct = activePlayers.filter(p => 
-        p.bet < currentBet && !p.isAllIn
+      
+      // Check if all active players have either:
+      // 1. Matched the current bet, or
+      // 2. Are all-in with less than the current bet
+      let playersWhoNeedToAct = 0;
+      let playersWhoCanAct = 0;
+      let activePlayerIds = [];
+      
+      for (const player of activePlayers) {
+        activePlayerIds.push(player.id);
+        
+        if (player.isAllIn) {
+          // All-in players don't need to act
+          continue;
+        }
+        
+        playersWhoCanAct++;
+        
+        if (player.bet < currentBet) {
+          playersWhoNeedToAct++;
+        }
+      }
+      
+      // Check if all eligible players have had a chance to act
+      const eligiblePlayersWhoHaventActed = activePlayerIds.filter(id => 
+        !this.playersActedThisRound.has(id) && 
+        !activePlayers.find(p => p.id === id).isAllIn
       );
-
-      return playersWhoNeedToAct.length === 0;
+      
+      // Round is complete if:
+      // 1. No players need to act (all bets are matched), AND
+      // 2. All eligible players have had at least one chance to act
+      const allBetsMatched = playersWhoNeedToAct === 0;
+      const allEligiblePlayersActed = eligiblePlayersWhoHaventActed.length === 0;
+      
+      const isComplete = allBetsMatched && (allEligiblePlayersActed || playersWhoCanAct <= 1);
+      
+      console.log(`Betting round check:`, {
+        activePlayers: activePlayers.length,
+        playersWhoCanAct,
+        playersWhoNeedToAct,
+        currentBet,
+        playersActed: this.playersActedThisRound.size,
+        eligiblePlayersWhoHaventActed: eligiblePlayersWhoHaventActed.length,
+        allBetsMatched,
+        allEligiblePlayersActed,
+        isComplete
+      });
+      
+      return isComplete;
     } catch (error) {
       console.error('Error in isBettingRoundComplete:', error);
       return true; // End round to prevent hanging
     }
-  }
-  nextRound() {
+  }nextRound() {
     try {
       // Reset bets for next round
       this.players.forEach(player => {
         player.bet = 0;
       });
+      
+      // Reset betting round tracking
+      this.playersActedThisRound = new Set();
 
       switch (this.round) {
         case 'preflop':
@@ -394,6 +480,8 @@ class PokerGame {
 
       // Start new betting round with player after dealer
       this.currentPlayerIndex = (this.dealerIndex + 1) % this.players.length;
+      this.bettingRoundStartPlayer = this.currentPlayerIndex;
+      
       let attempts = 0;
       while (
         attempts < this.players.length &&
@@ -407,6 +495,9 @@ class PokerGame {
       if (attempts >= this.players.length) {
         console.error('Could not find active player for next round');
         this.showdown(); // Force end if no active players
+      } else {
+        this.bettingRoundStartPlayer = this.currentPlayerIndex;
+        console.log(`New betting round (${this.round}) starting with player ${this.currentPlayerIndex} (${this.players[this.currentPlayerIndex].name})`);
       }
     } catch (error) {
       console.error('Error in nextRound:', error);
@@ -432,7 +523,6 @@ class PokerGame {
     this.deck.pop(); // burn card
     this.communityCards.push(this.deck.pop());
   }
-
   showdown() {
     const activePlayers = this.players.filter(p => !p.isFolded && p.isActive);
     
@@ -443,9 +533,14 @@ class PokerGame {
 
     // Determine winner(s)
     const winner = this.determineWinner(activePlayers);
-    winner.peligold += this.pot;
+    
+    // Award the pot to the winner
+    winner.chips += this.pot;
+    winner.peligold += this.pot; // Keep both synchronized
 
     this.gameState = 'finished';
+    
+    console.log(`Game finished. Winner: ${winner.name}, won ${this.pot} chips`);
   }
 
   evaluateHand(playerCards, communityCards) {
