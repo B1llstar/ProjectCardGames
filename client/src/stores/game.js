@@ -146,7 +146,6 @@ export const useGameStore = defineStore('game', () => {
     if (!socket.value || !currentLobby.value) return
     socket.value.emit('start-game', currentLobby.value.id)
   }
-
   const makePokerAction = (action, amount = 0) => {
     if (!socket.value || !currentLobby.value) return
     socket.value.emit('poker-action', {
@@ -154,6 +153,11 @@ export const useGameStore = defineStore('game', () => {
       action,
       amount
     })
+  }
+
+  const forceNextTurn = () => {
+    if (!socket.value || !currentLobby.value) return
+    socket.value.emit('force-next-turn', currentLobby.value.id)
   }
 
   const updateCursorPosition = (x, y) => {
@@ -213,8 +217,7 @@ export const useGameStore = defineStore('game', () => {
     isInGame,
     currentPlayer,
     isCurrentPlayerTurn,
-    
-    // Actions
+      // Actions
     initializeConnection,
     joinAsUser,
     createLobby,
@@ -222,6 +225,7 @@ export const useGameStore = defineStore('game', () => {
     leaveLobby,
     startGame,
     makePokerAction,
+    forceNextTurn,
     updateCursorPosition,
     sendCardInteraction,
     getLobbies,

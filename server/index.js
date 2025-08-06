@@ -213,6 +213,39 @@ io.on('connection', (socket) => {
       io.emit('lobbies-updated', gameManager.getPublicLobbies());
     }
   });
+
+  // Handle force next turn
+  socket.on('force-next-turn', (lobbyId) => {
+    const user = connectedUsers.get(socket.id);
+    if (!user) return;
+
+    const lobby = gameManager.getLobby(lobbyId);
+    if (!lobby || lobby.hostId !== socket.id) {
+      socket.emit('force-next-turn-error', 'Only the host can force next turn');
+      return;
+    }
+
+    const result = gameManager.forceNextTurn(lobbyId);
+    if (result.success) {
+      // Send personalized game state to each player
+      lobby.players.forEach(player => {
+        const personalizedResult = gameManager.getGameState(lobbyId, player.id);
+        if (personalizedResult.success) {
+          io.to(player.id).emit('game-state-updated', personalizedResult.gameState);
+        }
+      });
+      
+      if (result.action) {
+        io.to(lobbyId).emit('player-action', {
+          playerId: 'system',
+          playerName: 'System',
+          action: result.action
+        });
+      }
+    } else {
+      socket.emit('force-next-turn-error', result.error);
+    }
+  });
 });
 
 const PORT = process.env.PORT || 3002;

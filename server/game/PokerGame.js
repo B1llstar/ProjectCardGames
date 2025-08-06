@@ -60,8 +60,8 @@ class PokerGame {
   shuffleDeck(deck) {
     const shuffled = [...deck];
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];    }
+      const j = Math.floor(Math.random() * (i + 1));      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     
     return shuffled;
   }
@@ -121,8 +121,8 @@ class PokerGame {
 
   dealCards() {
     // Deal 2 cards to each player
-    for (let i = 0; i < 2; i++) {
-      for (const player of this.players) {        if (player.isActive && this.deck.length > 0) {
+    for (let i = 0; i < 2; i++) {      for (const player of this.players) {
+        if (player.isActive && this.deck.length > 0) {
           player.cards.push(this.deck.pop());
         }
       }
@@ -217,19 +217,20 @@ class PokerGame {
     // Move to next player
     this.moveToNextPlayer();
 
-    // Check if betting round is complete
-    if (this.isBettingRoundComplete()) {
+    // Check if betting round is complete    if (this.isBettingRoundComplete()) {
       this.nextRound();
-    }    return {
+    }
+    
+    return {
       success: true,
       gameState: this.getGameState(playerId),
       action: actionResult
     };
   }
-
   handleFold(player) {
     player.isFolded = true;
-    return {      success: true, 
+    return { 
+      success: true, 
       action: 'fold',
       message: `${player.name} folded`
     };
@@ -246,10 +247,10 @@ class PokerGame {
 
     const action = callAmount === 0 ? 'check' : 'call';
     return { 
-      success: true, 
-      action,
+      success: true,      action,
       amount: callAmount,
-      message: `${player.name} ${action === 'check' ? 'checked' : `called ${callAmount} chips`}`    };
+      message: `${player.name} ${action === 'check' ? 'checked' : `called ${callAmount} chips`}`
+    };
   }
 
   handleRaise(player, raiseAmount) {
@@ -284,10 +285,10 @@ class PokerGame {
       return { success: false, error: 'Cannot check, must call or fold' };
     }
 
-    return { 
-      success: true, 
+    return {      success: true, 
       action: 'check',
-      message: `${player.name} checked`    };
+      message: `${player.name} checked`
+    };
   }
 
   handleAllIn(player) {
@@ -380,9 +381,9 @@ class PokerGame {
     this.communityCards.push(this.deck.pop());
   }
 
-  dealRiver() {
-    // Burn one card, deal 1 community card
-    this.deck.pop(); // burn card    this.communityCards.push(this.deck.pop());
+  dealRiver() {    // Burn one card, deal 1 community card
+    this.deck.pop(); // burn card
+    this.communityCards.push(this.deck.pop());
   }
 
   showdown() {
@@ -412,10 +413,10 @@ class PokerGame {
     };
   }
 
-  determineWinner(players) {
-    // Simplified winner determination
+  determineWinner(players) {    // Simplified winner determination
     return players.reduce((winner, player) => 
-      player.handRank.value > winner.handRank.value ? player : winner    );
+      player.handRank.value > winner.handRank.value ? player : winner
+    );
   }
 
   getPlayerSuggestions(playerId) {
@@ -673,6 +674,41 @@ class PokerGame {
       lastAction: this.lastAction,
       dealerIndex: this.dealerIndex,
       settings: this.settings
+    };
+  }
+
+  forceNextTurn() {
+    // Get current player
+    const currentPlayer = this.players[this.currentPlayerIndex];
+    
+    if (currentPlayer && !currentPlayer.isFolded && currentPlayer.isActive) {
+      // Force fold if they haven't acted
+      currentPlayer.isFolded = true;
+      
+      this.lastAction = {
+        playerId: currentPlayer.id,
+        action: 'fold',
+        amount: 0,
+        forced: true
+      };
+    }
+    
+    // Move to next player
+    this.moveToNextPlayer();
+    
+    // Check if betting round is complete
+    if (this.isBettingRoundComplete()) {
+      this.nextRound();
+    }
+    
+    return {
+      success: true,
+      gameState: this.getGameState(),
+      action: {
+        success: true,
+        action: 'forced-fold',
+        message: `${currentPlayer.name} was forced to fold due to inactivity`
+      }
     };
   }
 }

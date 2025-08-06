@@ -100,6 +100,16 @@ class GameManager {
     return game.handlePlayerAction(playerId, action, amount);
   }
 
+  forceNextTurn(lobbyId) {
+    const game = this.games.get(lobbyId);
+    
+    if (!game || game.gameType !== 'poker') {
+      return { success: false, error: 'Game not found' };
+    }
+
+    return game.forceNextTurn();
+  }
+
   getGameState(lobbyId, requestingPlayerId) {
     const game = this.games.get(lobbyId);
     
