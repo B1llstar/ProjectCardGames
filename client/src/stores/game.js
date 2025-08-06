@@ -21,16 +21,21 @@ export const useGameStore = defineStore('game', () => {
     if (!gameState.value || !user.value) return null
     return gameState.value.players?.find(p => p.id === user.value.id)
   })
-  const isCurrentPlayerTurn = computed(() => {
-    if (!gameState.value || !currentPlayer.value) return false
-    return gameState.value.players?.[gameState.value.currentPlayerIndex]?.id === user.value.id  })
+  const isCurrentPlayerTurn = computed(() => {    if (!gameState.value || !currentPlayer.value) return false
+    return gameState.value.players?.[gameState.value.currentPlayerIndex]?.id === user.value.id
+  })
 
   // Actions
   const initializeConnection = () => {
     if (socket.value) return
     
-    socket.value = io('http://localhost:3002', {
-      transports: ['websocket']
+    // Use environment variable or default to same origin for production
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || window.location.origin
+    
+    socket.value = io(wsUrl, {
+      transports: ['polling', 'websocket'],
+      upgrade: true,
+      rememberUpgrade: true
     })
 
     socket.value.on('connect', () => {
