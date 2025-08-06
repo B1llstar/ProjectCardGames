@@ -1,11 +1,10 @@
 <template>
-  <div class="space-y-4">
-    <!-- Quick Actions -->
+  <div class="space-y-4">    <!-- Quick Actions -->
     <div class="flex space-x-3">
       <button
         v-if="canCheck"
         @click="$emit('make-action', 'check')"
-        class="btn btn-secondary flex-1"
+        class="action-button flex-1"
       >
         Check
       </button>
@@ -27,15 +26,15 @@
     <!-- Betting Actions -->
     <div v-if="canRaise" class="space-y-3">
       <div class="flex items-center space-x-3">
-        <label class="text-sm font-medium text-gray-700 whitespace-nowrap">
+        <label class="text-sm font-medium text-gray-300 whitespace-nowrap">
           Raise Amount:
         </label>
         <input
           v-model.number="raiseAmount"
           type="number"
           :min="minRaise"
-          :max="currentPlayer?.peligold"
-          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+          :max="currentPlayer?.peligold || currentPlayer?.chips"
+          class="input-dark flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
         />
         <button
           @click="handleRaise"

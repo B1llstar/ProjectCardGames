@@ -2,9 +2,9 @@
   <div
     :class="[
       'playing-card',
-      card.suit,
+      card?.suit || '',
       { 'suggested': isSuggested },
-      { 'card-back': isHidden }
+      { 'face-down': isHidden || !card }
     ]"
     @mouseenter="handleHover"
     @mouseleave="handleLeave"
@@ -12,7 +12,7 @@
     @mouseup="endDrag"
   >
     <!-- Front of card -->
-    <div v-if="!isHidden" class="card-front">
+    <div v-if="!isHidden && card" class="card-front">
       <div class="absolute top-1 left-1 text-xs">
         <div>{{ card.rank }}</div>
         <div>{{ getSuitSymbol(card.suit) }}</div>
@@ -26,9 +26,9 @@
       </div>
     </div>
 
-    <!-- Back of card -->
+    <!-- Back of card or empty state -->
     <div v-else class="card-back flex items-center justify-center">
-      <div class="text-blue-600 text-2xl">🂠</div>
+      <!-- This will use the CSS ::before pseudo-element for the card back -->
     </div>
 
     <!-- Suggestion Tooltip -->

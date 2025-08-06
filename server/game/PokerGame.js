@@ -61,8 +61,9 @@ class PokerGame {
     const shuffled = [...deck];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }    return shuffled;
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];    }
+    
+    return shuffled;
   }
 
   initializeGame() {
@@ -113,19 +114,19 @@ class PokerGame {
     if (this.players.length === 2) {
       // In heads-up, big blind acts first preflop
       this.currentPlayerIndex = this.bigBlindIndex;
-    } else {
-      // Normal game: first player after big blind
-      this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;    }
+    } else {      // Normal game: first player after big blind
+      this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;
+    }
   }
 
   dealCards() {
     // Deal 2 cards to each player
     for (let i = 0; i < 2; i++) {
-      for (const player of this.players) {
-        if (player.isActive && this.deck.length > 0) {
+      for (const player of this.players) {        if (player.isActive && this.deck.length > 0) {
           player.cards.push(this.deck.pop());
         }
-      }    }
+      }
+    }
   }
 
   postBlinds() {
@@ -219,21 +220,19 @@ class PokerGame {
     // Check if betting round is complete
     if (this.isBettingRoundComplete()) {
       this.nextRound();
-    }
-
-    return {
+    }    return {
       success: true,
-      gameState: this.getGameState(),
+      gameState: this.getGameState(playerId),
       action: actionResult
     };
   }
 
   handleFold(player) {
     player.isFolded = true;
-    return { 
-      success: true, 
+    return {      success: true, 
       action: 'fold',
-      message: `${player.name} folded`    };
+      message: `${player.name} folded`
+    };
   }
 
   handleCall(player) {
@@ -656,15 +655,15 @@ class PokerGame {
       handType
     };
   }
-
-  getGameState() {
+  getGameState(requestingPlayerId = null) {
     return {
       gameType: this.gameType,
       gameState: this.gameState,
       round: this.round,
       players: this.players.map(player => ({
         ...player,
-        cards: player.cards, // In real game, only show to the player themselves
+        // Only show cards to the player themselves
+        cards: player.id === requestingPlayerId ? player.cards : [],
         suggestions: this.getPlayerSuggestions(player.id)
       })),
       communityCards: this.communityCards,

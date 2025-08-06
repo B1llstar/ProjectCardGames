@@ -8,18 +8,18 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 min-h-screen;
+    @apply bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 min-h-screen text-white;
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-lg shadow-lg border border-gray-200;
+    @apply bg-gray-800 rounded-lg shadow-lg border border-gray-700 text-white;
     transition: all 0.3s ease;
   }
   
   .card:hover {
-    @apply shadow-xl transform scale-105;
+    @apply shadow-xl transform scale-105 border-gray-600;
   }
   
   .playing-card {
@@ -44,6 +44,15 @@
   .playing-card.clubs,
   .playing-card.spades {
     @apply text-black;
+  }
+  
+  .playing-card.face-down {
+    @apply bg-blue-900 border-blue-700;
+  }
+  
+  .playing-card.face-down::before {
+    content: '🂠';
+    @apply text-blue-300 text-2xl;
   }
   
   .btn {
@@ -84,5 +93,25 @@
   
   .pot-display {
     @apply absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-500 text-black px-4 py-2 rounded-full font-bold;
+  }
+  
+  .input-dark {
+    @apply bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500;
+  }
+  
+  .lobby-card {
+    @apply bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-all;
+  }
+  
+  .player-info {
+    @apply bg-gray-700 rounded-lg p-3 border border-gray-600;
+  }
+  
+  .action-button {
+    @apply bg-gray-700 hover:bg-gray-600 text-white border border-gray-600 rounded-lg px-4 py-2 transition-all;
+  }
+  
+  .game-table {
+    @apply bg-gradient-to-br from-green-800 to-green-900 rounded-2xl border-4 border-yellow-600 shadow-2xl;
   }
 }

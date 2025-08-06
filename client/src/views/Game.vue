@@ -6,10 +6,10 @@
         <div class="text-white">
           <h1 class="text-2xl font-bold">{{ currentLobby?.name }}</h1>
           <p class="text-green-200">Round: {{ gameState?.round || 'Pre-game' }}</p>
-        </div>
-        <div class="flex items-center space-x-4">
-          <div class="text-white text-right">            <div class="text-sm text-green-200">Your Peligold</div>
-            <div class="text-xl font-bold">💰 {{ currentPlayer?.peligold || 0 }}</div>
+        </div>        <div class="flex items-center space-x-4">
+          <div class="text-white text-right">
+            <div class="text-sm text-green-200">Your Peligold</div>
+            <div class="text-xl font-bold">💰 {{ currentPlayer?.chips || currentPlayer?.peligold || 0 }}</div>
           </div>
           <button @click="leaveLobby" class="btn btn-secondary">
             Leave Game
@@ -26,13 +26,11 @@
           @make-action="handlePokerAction"
           @card-interaction="handleCardInteraction"
         />
-      </div>
-
-      <!-- Action Panel -->
+      </div>      <!-- Action Panel -->
       <div v-if="isCurrentPlayerTurn" class="card p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold text-gray-800">Your Turn</h3>
-          <div class="text-sm text-gray-600">
+          <h3 class="text-lg font-bold text-white">Your Turn</h3>
+          <div class="text-sm text-gray-300">
             Current bet: {{ gameState?.currentBet || 0 }} Peligold
           </div>
         </div>
@@ -46,7 +44,7 @@
 
       <!-- Suggestions Panel -->
       <div v-if="currentPlayer?.suggestions?.length" class="card p-6 mb-6">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">💡 Suggested Actions</h3>
+        <h3 class="text-lg font-bold text-white mb-4">💡 Suggested Actions</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div
             v-for="suggestion in currentPlayer.suggestions"

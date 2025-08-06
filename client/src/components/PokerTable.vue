@@ -1,5 +1,4 @@
-<template>
-  <div class="poker-table">
+<template>  <div class="game-table">
     <!-- Community Cards -->
     <div class="community-cards">
       <PlayingCard
@@ -13,7 +12,7 @@
       <div
         v-for="i in (5 - (gameState?.communityCards?.length || 0))"
         :key="`placeholder-${i}`"
-        class="w-16 h-24 border-2 border-dashed border-gray-400 rounded-lg"
+        class="w-16 h-24 border-2 border-dashed border-gray-600 rounded-lg bg-gray-800"
       ></div>
     </div>
 
@@ -31,8 +30,8 @@
     >
       <!-- Player Info -->
       <div :class="[
-        'text-center p-3 rounded-lg',
-        player.id === currentPlayer?.id ? 'bg-blue-100 border-2 border-blue-400' : 'bg-white border border-gray-300',
+        'player-info text-center',
+        player.id === currentPlayer?.id ? 'bg-blue-900 border-2 border-blue-400' : '',
         index === gameState?.currentPlayerIndex ? 'ring-4 ring-yellow-400 ring-opacity-70' : '',
         player.isFolded ? 'opacity-50' : ''
       ]">
@@ -40,14 +39,14 @@
         <div class="flex items-center justify-center space-x-2 mb-2">
           <span class="text-2xl">{{ player.avatar }}</span>
           <div class="text-left">
-            <div class="font-medium text-sm">{{ player.name }}</div>
-            <div class="text-xs text-gray-600">💰 {{ player.peligold }}</div>
+            <div class="font-medium text-sm text-white">{{ player.name }}</div>
+            <div class="text-xs text-gray-300">💰 {{ player.chips || player.peligold || 0 }}</div>
           </div>
         </div>
 
         <!-- Player Status -->
         <div class="text-xs space-y-1">
-          <div v-if="player.bet > 0" class="text-green-600 font-medium">
+          <div v-if="player.bet > 0" class="text-green-400 font-medium">
             Bet: {{ player.bet }}
           </div>
           <div v-if="player.isFolded" class="text-red-600">Folded</div>

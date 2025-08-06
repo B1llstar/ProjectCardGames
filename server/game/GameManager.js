@@ -62,8 +62,7 @@ class GameManager {
 
     return { success: true, lobby };
   }
-
-  startGame(lobbyId) {
+  startGame(lobbyId, requestingPlayerId = null) {
     const lobby = this.lobbies.get(lobbyId);
     
     if (!lobby) {
@@ -84,7 +83,7 @@ class GameManager {
       
       return { 
         success: true, 
-        gameState: game.getGameState() 
+        gameState: game.getGameState(requestingPlayerId) 
       };
     }
 
@@ -99,6 +98,19 @@ class GameManager {
     }
 
     return game.handlePlayerAction(playerId, action, amount);
+  }
+
+  getGameState(lobbyId, requestingPlayerId) {
+    const game = this.games.get(lobbyId);
+    
+    if (!game) {
+      return { success: false, error: 'Game not found' };
+    }
+
+    return {
+      success: true,
+      gameState: game.getGameState(requestingPlayerId)
+    };
   }
 
   getPublicLobbies() {

@@ -101,20 +101,24 @@ io.on('connection', (socket) => {
       io.emit('lobbies-updated', gameManager.getPublicLobbies());
     }
   });
-
   // Handle starting game
   socket.on('start-game', (lobbyId) => {
     const lobby = gameManager.getLobby(lobbyId);
     if (!lobby || lobby.hostId !== socket.id) return;
 
-    const result = gameManager.startGame(lobbyId);
+    const result = gameManager.startGame(lobbyId, socket.id);
     if (result.success) {
-      io.to(lobbyId).emit('game-started', result.gameState);
+      // Send personalized game state to each player
+      lobby.players.forEach(player => {
+        const personalizedResult = gameManager.getGameState(lobbyId, player.id);
+        if (personalizedResult.success) {
+          io.to(player.id).emit('game-started', personalizedResult.gameState);
+        }
+      });
     } else {
       socket.emit('start-game-error', result.error);
     }
   });
-
   // Handle poker game actions
   socket.on('poker-action', (data) => {
     const { lobbyId, action, amount } = data;
@@ -123,7 +127,16 @@ io.on('connection', (socket) => {
 
     const result = gameManager.handlePokerAction(lobbyId, user.id, action, amount);
     if (result.success) {
-      io.to(lobbyId).emit('game-state-updated', result.gameState);
+      // Send personalized game state to each player
+      const lobby = gameManager.getLobby(lobbyId);
+      if (lobby) {
+        lobby.players.forEach(player => {
+          const personalizedResult = gameManager.getGameState(lobbyId, player.id);
+          if (personalizedResult.success) {
+            io.to(player.id).emit('game-state-updated', personalizedResult.gameState);
+          }
+        });
+      }
       
       if (result.action) {
         io.to(lobbyId).emit('player-action', {
