@@ -215,9 +215,8 @@ class PokerGame {
     };
 
     // Move to next player
-    this.moveToNextPlayer();
-
-    // Check if betting round is complete    if (this.isBettingRoundComplete()) {
+    this.moveToNextPlayer();    // Check if betting round is complete
+    if (this.isBettingRoundComplete()) {
       this.nextRound();
     }
     
