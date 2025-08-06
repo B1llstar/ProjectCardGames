@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 min-h-screen;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-lg border border-gray-200;
+    transition: all 0.3s ease;
+  }
+  
+  .card:hover {
+    @apply shadow-xl transform scale-105;
+  }
+  
+  .playing-card {
+    @apply w-16 h-24 bg-white rounded-lg border-2 border-gray-300 flex items-center justify-center text-lg font-bold cursor-pointer relative;
+    transition: all 0.3s ease;
+    perspective: 1000px;
+  }
+  
+  .playing-card:hover {
+    @apply transform -translate-y-2 shadow-lg;
+  }
+  
+  .playing-card.suggested {
+    @apply ring-4 ring-yellow-400 ring-opacity-70 animate-pulse-glow;
+  }
+  
+  .playing-card.hearts,
+  .playing-card.diamonds {
+    @apply text-red-600;
+  }
+  
+  .playing-card.clubs,
+  .playing-card.spades {
+    @apply text-black;
+  }
+  
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+  }
+    .btn-success {
+    @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+  }
+  
+  .btn-warning {
+    @apply bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+  
+  .poker-table {
+    @apply relative w-full max-w-6xl mx-auto bg-green-800 rounded-full border-8 border-yellow-600;
+    aspect-ratio: 2 / 1;
+  }
+  
+  .player-seat {
+    @apply absolute flex flex-col items-center space-y-2;
+  }
+  
+  .community-cards {
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex space-x-2;
+  }
+  
+  .pot-display {
+    @apply absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-500 text-black px-4 py-2 rounded-full font-bold;
+  }
+}
