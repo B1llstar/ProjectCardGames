@@ -1,7 +1,10 @@
-class PokerGame {
-  constructor(players, settings = {}) {
+class PokerGame {  constructor(players, settings = {}) {
     this.gameType = 'poker';
-      this.players = players.map((player, index) => ({
+    
+    // Debug: Log the incoming players to see their structure
+    console.log('PokerGame constructor received players:', JSON.stringify(players, null, 2));
+    
+    this.players = players.map((player, index) => ({
       ...player,
       position: index,
       cards: [],
@@ -89,10 +92,16 @@ class PokerGame {
         }
       }
     }
-  }
-  postBlinds() {
+  }  postBlinds() {
+    console.log('postBlinds - players:', JSON.stringify(this.players, null, 2));
+    console.log('postBlinds - smallBlindIndex:', this.smallBlindIndex);
+    console.log('postBlinds - bigBlindIndex:', this.bigBlindIndex);
+    
     const smallBlindPlayer = this.players[this.smallBlindIndex];
     const bigBlindPlayer = this.players[this.bigBlindIndex];
+
+    console.log('smallBlindPlayer:', smallBlindPlayer);
+    console.log('bigBlindPlayer:', bigBlindPlayer);
 
     smallBlindPlayer.bet = Math.min(this.settings.blinds.small, smallBlindPlayer.peligold);
     smallBlindPlayer.peligold -= smallBlindPlayer.bet;
