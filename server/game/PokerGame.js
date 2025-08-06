@@ -58,9 +58,9 @@ class PokerGame {
   }
 
   shuffleDeck(deck) {
-    const shuffled = [...deck];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    const shuffled = [...deck];    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
     return shuffled;
@@ -97,11 +97,11 @@ class PokerGame {
       blinds: {
         small: 10,
         big: 20
-      },
-      autoDealer: true,
+      },      autoDealer: true,
       ...this.settings
     };
-      // Initialize betting variables
+    
+    // Initialize betting variables
     this.lastRaiseAmount = this.settings.blinds.big;
     
     if (this.settings.autoDealer) {
@@ -109,19 +109,19 @@ class PokerGame {
     }
     this.postBlinds();
     this.gameState = 'betting';
-    
-    // Set current player to first to act after big blind
+      // Set current player to first to act after big blind
     if (this.players.length === 2) {
-      // In heads-up, big blind acts first preflop
-      this.currentPlayerIndex = this.bigBlindIndex;
-    } else {      // Normal game: first player after big blind
+      // In heads-up, dealer (small blind) acts first preflop
+      this.currentPlayerIndex = this.smallBlindIndex;
+    } else {
+      // Normal game: first player after big blind
       this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;
     }
   }
 
-  dealCards() {
-    // Deal 2 cards to each player
-    for (let i = 0; i < 2; i++) {      for (const player of this.players) {
+  dealCards() {    // Deal 2 cards to each player
+    for (let i = 0; i < 2; i++) {
+      for (const player of this.players) {
         if (player.isActive && this.deck.length > 0) {
           player.cards.push(this.deck.pop());
         }
@@ -169,71 +169,86 @@ class PokerGame {
     
     console.log('Blinds posted successfully. Pot:', this.pot);
   }
-
   handlePlayerAction(playerId, action, amount = 0) {
-    const player = this.players.find(p => p.id === playerId);
-    const currentPlayer = this.players[this.currentPlayerIndex];
+    try {
+      const player = this.players.find(p => p.id === playerId);
+      const currentPlayer = this.players[this.currentPlayerIndex];
 
-    if (!player || !currentPlayer || player.id !== currentPlayer.id) {
-      return { success: false, error: 'Not your turn' };
+      if (!player) {
+        return { success: false, error: 'Player not found' };
+      }
+
+      if (!currentPlayer) {
+        console.error('No current player found at index:', this.currentPlayerIndex);
+        return { success: false, error: 'Game state error - no current player' };
+      }
+
+      if (player.id !== currentPlayer.id) {
+        return { success: false, error: 'Not your turn' };
+      }
+
+      if (player.isFolded || !player.isActive) {
+        return { success: false, error: 'Player is not active' };
+      }
+
+      let actionResult = null;
+
+      switch (action) {
+        case 'fold':
+          actionResult = this.handleFold(player);
+          break;
+        case 'call':
+          actionResult = this.handleCall(player);
+          break;
+        case 'raise':
+          actionResult = this.handleRaise(player, amount);
+          break;
+        case 'check':
+          actionResult = this.handleCheck(player);
+          break;
+        case 'all-in':
+          actionResult = this.handleAllIn(player);
+          break;
+        default:
+          return { success: false, error: 'Invalid action' };
+      }
+
+      if (!actionResult || !actionResult.success) {
+        return actionResult || { success: false, error: 'Action failed' };
+      }
+
+      this.lastAction = {
+        playerId,
+        action,
+        amount: actionResult.amount || 0
+      };
+      
+      // Move to next player
+      this.moveToNextPlayer();
+      
+      // Check if betting round is complete
+      if (this.isBettingRoundComplete()) {
+        this.nextRound();
+      }
+      
+      return {
+        success: true,
+        gameState: this.getGameState(playerId),
+        action: actionResult
+      };
+    } catch (error) {
+      console.error('Error in handlePlayerAction:', error);
+      return { success: false, error: 'Internal game error' };
     }
-
-    if (player.isFolded || !player.isActive) {
-      return { success: false, error: 'Player is not active' };
-    }
-
-    let actionResult = null;
-
-    switch (action) {
-      case 'fold':
-        actionResult = this.handleFold(player);
-        break;
-      case 'call':
-        actionResult = this.handleCall(player);
-        break;
-      case 'raise':
-        actionResult = this.handleRaise(player, amount);
-        break;
-      case 'check':
-        actionResult = this.handleCheck(player);
-        break;
-      case 'all-in':
-        actionResult = this.handleAllIn(player);
-        break;
-      default:
-        return { success: false, error: 'Invalid action' };
-    }
-
-    if (!actionResult.success) {
-      return actionResult;
-    }
-
-    this.lastAction = {
-      playerId,
-      action,
-      amount: actionResult.amount || 0
-    };
-
-    // Move to next player
-    this.moveToNextPlayer();    // Check if betting round is complete
-    if (this.isBettingRoundComplete()) {
-      this.nextRound();
-    }
-    
-    return {
-      success: true,
-      gameState: this.getGameState(playerId),
-      action: actionResult
-    };
   }
+
   handleFold(player) {
     player.isFolded = true;
     return { 
       success: true, 
       action: 'fold',
       message: `${player.name} folded`
-    };
-  }
+    };  }
 
   handleCall(player) {
     const currentBet = this.getCurrentBet();
@@ -245,8 +260,10 @@ class PokerGame {
     this.pot += callAmount;
 
     const action = callAmount === 0 ? 'check' : 'call';
+    
     return { 
-      success: true,      action,
+      success: true,
+      action,
       amount: callAmount,
       message: `${player.name} ${action === 'check' ? 'checked' : `called ${callAmount} chips`}`
     };
@@ -277,24 +294,24 @@ class PokerGame {
       message: `${player.name} raised by ${raiseAmount} chips`
     };
   }
-
   handleCheck(player) {
     const currentBet = this.getCurrentBet();
     if (player.bet < currentBet) {
       return { success: false, error: 'Cannot check, must call or fold' };
     }
-
-    return {      success: true, 
+    
+    return {
+      success: true, 
       action: 'check',
       message: `${player.name} checked`
     };
   }
-
   handleAllIn(player) {
-    const allInAmount = player.peligold;
+    const allInAmount = player.chips;
     player.bet += allInAmount;
     player.totalBet += allInAmount;
-    player.peligold = 0;
+    player.chips = 0;
+    player.peligold = 0; // Keep synchronized
     player.isAllIn = true;
     this.pot += allInAmount;
 
@@ -302,67 +319,98 @@ class PokerGame {
       success: true, 
       action: 'all-in',
       amount: allInAmount,
-      message: `${player.name} went all-in with ${allInAmount} Peligold`
+      message: `${player.name} went all-in with ${allInAmount} chips`
     };
   }
 
   getCurrentBet() {
     return Math.max(...this.players.map(p => p.bet));
-  }
-
-  moveToNextPlayer() {
+  }  moveToNextPlayer() {
+    const startIndex = this.currentPlayerIndex;
+    let iterations = 0;
+    const maxIterations = this.players.length;
+    
     do {
       this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+      iterations++;
+      
+      // Prevent infinite loop
+      if (iterations > maxIterations) {
+        console.error('moveToNextPlayer: Could not find next active player');
+        // Find any active player as fallback
+        const activePlayerIndex = this.players.findIndex(p => p.isActive && !p.isFolded);
+        if (activePlayerIndex >= 0) {
+          this.currentPlayerIndex = activePlayerIndex;
+        }
+        break;
+      }
     } while (
-      this.players[this.currentPlayerIndex].isFolded || 
-      !this.players[this.currentPlayerIndex].isActive ||
-      this.players[this.currentPlayerIndex].isAllIn
+      this.currentPlayerIndex < this.players.length &&
+      (this.players[this.currentPlayerIndex].isFolded || 
+       !this.players[this.currentPlayerIndex].isActive ||
+       this.players[this.currentPlayerIndex].isAllIn)
     );
   }
-
   isBettingRoundComplete() {
-    const activePlayers = this.players.filter(p => p.isActive && !p.isFolded);
-    if (activePlayers.length <= 1) return true;
+    try {
+      const activePlayers = this.players.filter(p => p.isActive && !p.isFolded);
+      if (activePlayers.length <= 1) return true;
 
-    const currentBet = this.getCurrentBet();
-    const playersWhoNeedToAct = activePlayers.filter(p => 
-      p.bet < currentBet && !p.isAllIn
-    );
+      const currentBet = this.getCurrentBet();
+      const playersWhoNeedToAct = activePlayers.filter(p => 
+        p.bet < currentBet && !p.isAllIn
+      );
 
-    return playersWhoNeedToAct.length === 0;
-  }
-
-  nextRound() {
-    // Reset bets for next round
-    this.players.forEach(player => {
-      player.bet = 0;
-    });
-
-    switch (this.round) {
-      case 'preflop':
-        this.dealFlop();
-        this.round = 'flop';
-        break;
-      case 'flop':
-        this.dealTurn();
-        this.round = 'turn';
-        break;
-      case 'turn':
-        this.dealRiver();
-        this.round = 'river';
-        break;
-      case 'river':
-        this.showdown();
-        return;
+      return playersWhoNeedToAct.length === 0;
+    } catch (error) {
+      console.error('Error in isBettingRoundComplete:', error);
+      return true; // End round to prevent hanging
     }
+  }
+  nextRound() {
+    try {
+      // Reset bets for next round
+      this.players.forEach(player => {
+        player.bet = 0;
+      });
 
-    // Start new betting round with player after dealer
-    this.currentPlayerIndex = (this.dealerIndex + 1) % this.players.length;
-    while (
-      this.players[this.currentPlayerIndex].isFolded || 
-      !this.players[this.currentPlayerIndex].isActive
-    ) {
-      this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+      switch (this.round) {
+        case 'preflop':
+          this.dealFlop();
+          this.round = 'flop';
+          break;
+        case 'flop':
+          this.dealTurn();
+          this.round = 'turn';
+          break;
+        case 'turn':
+          this.dealRiver();
+          this.round = 'river';
+          break;
+        case 'river':
+          this.showdown();
+          return;
+      }
+
+      // Start new betting round with player after dealer
+      this.currentPlayerIndex = (this.dealerIndex + 1) % this.players.length;
+      let attempts = 0;
+      while (
+        attempts < this.players.length &&
+        (this.players[this.currentPlayerIndex].isFolded || 
+         !this.players[this.currentPlayerIndex].isActive)
+      ) {
+        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        attempts++;
+      }
+      
+      if (attempts >= this.players.length) {
+        console.error('Could not find active player for next round');
+        this.showdown(); // Force end if no active players
+      }
+    } catch (error) {
+      console.error('Error in nextRound:', error);
+      this.showdown(); // Force end on error
     }
   }
 
@@ -379,8 +427,8 @@ class PokerGame {
     this.deck.pop(); // burn card
     this.communityCards.push(this.deck.pop());
   }
-
-  dealRiver() {    // Burn one card, deal 1 community card
+  dealRiver() {
+    // Burn one card, deal 1 community card
     this.deck.pop(); // burn card
     this.communityCards.push(this.deck.pop());
   }
@@ -411,8 +459,8 @@ class PokerGame {
       description: `High card: ${allCards.find(c => c.value === highCard).rank}`
     };
   }
-
-  determineWinner(players) {    // Simplified winner determination
+  determineWinner(players) {
+    // Simplified winner determination
     return players.reduce((winner, player) => 
       player.handRank.value > winner.handRank.value ? player : winner
     );

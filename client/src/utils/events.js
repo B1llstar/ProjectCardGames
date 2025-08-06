@@ -4,6 +4,11 @@ export const SERVER_EVENTS = {
   // Connection events
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
+  CONNECT_ERROR: 'connect_error',
+  RECONNECT: 'reconnect',
+  RECONNECT_ATTEMPT: 'reconnect_attempt',
+  RECONNECT_ERROR: 'reconnect_error',
+  RECONNECT_FAILED: 'reconnect_failed',
   
   // User events
   JOIN_USER: 'join-user',
@@ -41,7 +46,8 @@ export const SERVER_EVENTS = {
   // Error events
   JOIN_LOBBY_ERROR: 'join-lobby-error',
   START_GAME_ERROR: 'start-game-error',
-  POKER_ACTION_ERROR: 'poker-action-error'
+  POKER_ACTION_ERROR: 'poker-action-error',
+  CONNECTION_ERROR: 'connection-error'
 }
 
 export const INTERACTION_TYPES = {

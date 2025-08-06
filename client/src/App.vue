@@ -2,6 +2,9 @@
   <div id="app" class="min-h-screen" @mousemove="trackCursor">
     <router-view />
     
+    <!-- Connection Status Indicator -->
+    <ConnectionStatus />
+    
     <!-- Other players' cursors -->
     <div
       v-for="cursor in otherPlayersCursors"
@@ -21,6 +24,7 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useGameStore } from './stores/game'
 import { storeToRefs } from 'pinia'
+import ConnectionStatus from './components/ConnectionStatus.vue'
 
 const gameStore = useGameStore()
 const { otherPlayersCursors } = storeToRefs(gameStore)
@@ -37,7 +41,7 @@ const trackCursor = (event) => {
 }
 
 onMounted(() => {
-  gameStore.initializeConnection()
+  gameStore.initializeWithNetworkMonitoring()
 })
 
 onUnmounted(() => {
