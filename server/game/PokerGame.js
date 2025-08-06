@@ -2,8 +2,8 @@ class PokerGame {
   constructor(players, settings = {}) {
     this.gameType = 'poker';
     console.log('Starting new poker game with players:', players.map(p => p.name));
-    
-    // Simple player setup - just preserve what we need    this.players = players.map((player, index) => ({
+      // Simple player setup - just preserve what we need
+    this.players = players.map((player, index) => ({
       id: player.id,
       name: player.name,
       position: index,
@@ -62,9 +62,10 @@ class PokerGame {
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }  initializeGame() {
+    }    return shuffled;
+  }
+
+  initializeGame() {
     // Set up dealer and blind positions
     this.dealerIndex = 0;
     
@@ -114,9 +115,9 @@ class PokerGame {
       this.currentPlayerIndex = this.bigBlindIndex;
     } else {
       // Normal game: first player after big blind
-      this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;
-    }
+      this.currentPlayerIndex = (this.bigBlindIndex + 1) % this.players.length;    }
   }
+
   dealCards() {
     // Deal 2 cards to each player
     for (let i = 0; i < 2; i++) {
@@ -124,9 +125,10 @@ class PokerGame {
         if (player.isActive && this.deck.length > 0) {
           player.cards.push(this.deck.pop());
         }
-      }
-    }
-  }  postBlinds() {
+      }    }
+  }
+
+  postBlinds() {
     console.log('postBlinds - players:', this.players.length);
     console.log('postBlinds - smallBlindIndex:', this.smallBlindIndex);
     console.log('postBlinds - bigBlindIndex:', this.bigBlindIndex);
@@ -231,9 +233,10 @@ class PokerGame {
     return { 
       success: true, 
       action: 'fold',
-      message: `${player.name} folded`
-    };
-  }  handleCall(player) {
+      message: `${player.name} folded`    };
+  }
+
+  handleCall(player) {
     const currentBet = this.getCurrentBet();
     const callAmount = Math.min(currentBet - player.bet, player.chips);
     
@@ -247,9 +250,10 @@ class PokerGame {
       success: true, 
       action,
       amount: callAmount,
-      message: `${player.name} ${action === 'check' ? 'checked' : `called ${callAmount} chips`}`
-    };
-  }  handleRaise(player, raiseAmount) {
+      message: `${player.name} ${action === 'check' ? 'checked' : `called ${callAmount} chips`}`    };
+  }
+
+  handleRaise(player, raiseAmount) {
     const currentBet = this.getCurrentBet();
     const totalAmount = currentBet - player.bet + raiseAmount;
     
@@ -284,9 +288,9 @@ class PokerGame {
     return { 
       success: true, 
       action: 'check',
-      message: `${player.name} checked`
-    };
+      message: `${player.name} checked`    };
   }
+
   handleAllIn(player) {
     const allInAmount = player.peligold;
     player.bet += allInAmount;
@@ -379,9 +383,9 @@ class PokerGame {
 
   dealRiver() {
     // Burn one card, deal 1 community card
-    this.deck.pop(); // burn card
-    this.communityCards.push(this.deck.pop());
+    this.deck.pop(); // burn card    this.communityCards.push(this.deck.pop());
   }
+
   showdown() {
     const activePlayers = this.players.filter(p => !p.isFolded && p.isActive);
     
@@ -412,9 +416,9 @@ class PokerGame {
   determineWinner(players) {
     // Simplified winner determination
     return players.reduce((winner, player) => 
-      player.handRank.value > winner.handRank.value ? player : winner
-    );
+      player.handRank.value > winner.handRank.value ? player : winner    );
   }
+
   getPlayerSuggestions(playerId) {
     const player = this.players.find(p => p.id === playerId);
     if (!player || player.id !== this.players[this.currentPlayerIndex].id) {
