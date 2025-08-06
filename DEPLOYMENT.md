@@ -48,6 +48,34 @@ sudo systemctl enable project-board-games.service
 sudo systemctl start project-board-games.service
 ```
 
+### 3.1. Fix PostCSS config for ES modules
+```bash
+# Rename PostCSS config to .cjs for compatibility
+cd /var/www/project-board-games/client
+mv postcss.config.js postcss.config.cjs
+
+# Or recreate it properly
+cat > postcss.config.cjs << 'EOF'
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  }
+}
+EOF
+```
+
+### 3.2. Check for port conflicts
+```bash
+# Check what's using port 3002
+sudo lsof -i :3002
+# Kill any process using port 3002 if needed
+# sudo kill -9 <PID>
+
+# Check what's using port 3001  
+sudo lsof -i :3001
+```
+
 ### 4. Configure Apache2
 ```bash
 # Enable required modules
@@ -95,6 +123,42 @@ nohup npm run dev > dev.log 2>&1 &
 ```bash
 sudo apt install certbot python3-certbot-apache -y
 sudo certbot --apache -d your-domain.com
+```
+
+## Quick Fixes for Common Issues
+
+### Port conflict (EADDRINUSE)
+```bash
+# Check what's using the ports
+sudo lsof -i :3001
+sudo lsof -i :3002
+sudo lsof -i :5173
+
+# Kill processes if needed
+sudo pkill -f "node server/index.js"
+sudo pkill -f "npm run server" 
+sudo pkill -f "npm run dev"
+
+# Restart services
+sudo systemctl restart project-board-games.service
+cd /var/www/project-board-games && nohup npm run dev > dev.log 2>&1 &
+```
+
+### PostCSS ES module error
+```bash
+cd /var/www/project-board-games/client
+# Rename config file
+mv postcss.config.js postcss.config.cjs 2>/dev/null || true
+
+# Recreate if needed
+cat > postcss.config.cjs << 'EOF'
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  }
+}
+EOF
 ```
 
 ## Quick Commands
